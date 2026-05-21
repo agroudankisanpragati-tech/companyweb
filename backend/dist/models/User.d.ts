@@ -1,0 +1,30 @@
+import mongoose, { Document } from 'mongoose';
+export interface IUser extends Document {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+    farmSize: number;
+    location: {
+        state: string;
+        district: string;
+        coordinates: {
+            latitude: number;
+            longitude: number;
+        };
+    };
+    soilType: string;
+    waterSource: string;
+    role: 'farmer' | 'vendor' | 'admin';
+    crops: string[];
+    points: number;
+    verified: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export declare const User: mongoose.Model<IUser, {}, {}, {}, mongoose.Document<unknown, {}, IUser, {}, {}> & IUser & Required<{
+    _id: mongoose.Types.ObjectId;
+}> & {
+    __v: number;
+}, any>;
+//# sourceMappingURL=User.d.ts.map
