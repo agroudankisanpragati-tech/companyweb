@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaSave, FaCamera } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import FarmerHeader from '@/components/FarmerHeader';
+import FarmerFooter from '@/components/FarmerFooter';
 
 interface FarmerProfile {
     id?: string;
@@ -111,7 +113,9 @@ export default function FarmerEditProfile() {
         );
 
     return (
-        <main className="min-h-screen bg-gray-50">
+        <>
+            <FarmerHeader />
+            <main className="min-h-screen bg-gray-50">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
                 <header className="mb-6 flex items-center gap-4">
                     <button onClick={() => router.back()} className="p-2 hover:bg-gray-200 rounded-lg transition">
@@ -231,5 +235,7 @@ export default function FarmerEditProfile() {
                 </form>
             </div>
         </main>
+            <FarmerFooter />
+        </>
     );
 }
