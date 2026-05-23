@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type UserRole = 'farmer' | 'shopkeeper' | 'agribusiness';
+export type UserRole = 'farmer' | 'shopkeeper';
 
 export interface User {
     id: string;
@@ -18,8 +18,8 @@ interface AuthContextType {
     role: UserRole | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    register: (userData: RegisterData) => Promise<void>;
+    login: (email: string, password: string, preferredRole?: UserRole) => Promise<User>;
+    register: (userData: RegisterData, preferredRole?: UserRole) => Promise<User>;
     logout: () => void;
 }
 
@@ -34,6 +34,14 @@ export interface RegisterData {
     businessType?: string;
 }
 
+const normalizeRole = (role: unknown): UserRole => {
+    return role === 'shopkeeper' || role === 'vendor' ? 'shopkeeper' : 'farmer';
+};
+
+const toBackendRole = (role: UserRole) => {
+    return role === 'shopkeeper' ? 'vendor' : 'farmer';
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -41,22 +49,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [role, setRole] = useState<UserRole | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load user from localStorage on mount
-    useEffect(() => {
+    const syncFromStorage = () => {
         const savedUser = localStorage.getItem('user');
         const savedToken = localStorage.getItem('authToken');
 
         if (savedUser && savedToken) {
             const parsedUser = JSON.parse(savedUser);
-            setUser(parsedUser);
-            setRole(parsedUser.role);
+            const normalizedRole = normalizeRole(parsedUser.role);
+            const normalizedUser = { ...parsedUser, role: normalizedRole };
+            setUser(normalizedUser);
+            setRole(normalizedRole);
+            if (normalizedRole !== parsedUser.role) {
+                localStorage.setItem('user', JSON.stringify(normalizedUser));
+            }
+            return;
         }
+
+        setUser(null);
+        setRole(null);
+    };
+
+    // Load user from localStorage on mount
+    useEffect(() => {
+        syncFromStorage();
         setIsLoading(false);
+
+        const handleAuthSessionChange = () => {
+            syncFromStorage();
+        };
+
+        window.addEventListener('auth-session-changed', handleAuthSessionChange);
+        return () => window.removeEventListener('auth-session-changed', handleAuthSessionChange);
     }, []);
 
     const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.agroudankisanpragati.com/api';
 
-    const register = async (userData: RegisterData) => {
+    const register = async (userData: RegisterData, preferredRole?: UserRole): Promise<User> => {
         try {
             setIsLoading(true);
 
@@ -68,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     email: userData.email,
                     phone: userData.phone,
                     password: userData.password,
-                    role: 'farmer',
+                    role: toBackendRole(userData.role),
                 };
 
                 // farmSize may be provided as string; convert to number if possible
@@ -96,19 +124,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 if (res.ok) {
                     const data = await res.json();
+                    const normalizedRole = normalizeRole(preferredRole || data.user?.role || userData.role);
                     const newUser: User = {
                         id: data.user?.id || data.user?._id || Date.now().toString(),
                         email: data.user?.email || userData.email,
                         name: data.user?.name || userData.name,
-                        role: (data.user?.role as UserRole) || userData.role,
+                        role: normalizedRole,
                         phone: data.user?.phone || userData.phone,
                     };
 
                     localStorage.setItem('user', JSON.stringify(newUser));
                     if (data.token) localStorage.setItem('authToken', data.token);
                     setUser(newUser);
-                    setRole(newUser.role as UserRole);
-                    return;
+                    setRole(newUser.role);
+                    window.dispatchEvent(new Event('auth-session-changed'));
+                    return newUser;
                 }
                 // if server returned error, fallthrough to local fallback
             } catch (err) {
@@ -121,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 id: Date.now().toString(),
                 email: userData.email,
                 name: userData.name,
-                role: userData.role,
+                role: normalizeRole(preferredRole || userData.role),
                 phone: userData.phone,
             };
 
@@ -147,12 +177,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             setUser(newUser);
             setRole(userData.role);
+            window.dispatchEvent(new Event('auth-session-changed'));
+            return newUser;
         } finally {
             setIsLoading(false);
         }
     };
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, preferredRole?: UserRole): Promise<User> => {
         try {
             setIsLoading(true);
 
@@ -166,19 +198,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 if (res.ok) {
                     const data = await res.json();
+                    const normalizedRole = normalizeRole(preferredRole || data.user?.role);
                     const loggedUser: User = {
                         id: data.user?.id || data.user?._id || Date.now().toString(),
                         email: data.user?.email,
                         name: data.user?.name,
-                        role: (data.user?.role as UserRole) || 'farmer',
+                        role: normalizedRole,
                         phone: data.user?.phone,
                     };
 
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('user', JSON.stringify(loggedUser));
                     setUser(loggedUser);
-                    setRole(loggedUser.role as UserRole);
-                    return;
+                    setRole(loggedUser.role);
+                    window.dispatchEvent(new Event('auth-session-changed'));
+                    return loggedUser;
                 }
             } catch (err) {
                 // server not reachable or error - fallback to localStorage
@@ -188,28 +222,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Local fallback (legacy behavior)
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            // 1) Check current session 'user' (fast path)
-            const current = JSON.parse(localStorage.getItem('user') || 'null');
-            if (current && current.email === email) {
-                const token = `token_${Date.now()}`;
-                localStorage.setItem('authToken', token);
-                setUser(current);
-                setRole(current.role);
-                return;
-            }
-
-            // 2) Check localUsers list for accounts created via fallback
+            // Check localUsers list for accounts created via fallback
             try {
                 const raw = localStorage.getItem('localUsers');
                 const localUsers: Array<any> = raw ? JSON.parse(raw) : [];
                 const matched = localUsers.find(u => u.email === email && u.password === password);
                 if (matched) {
                     const token = `token_${Date.now()}`;
+                    const normalizedRole = normalizeRole(preferredRole || matched.user?.role);
+                    const normalizedUser = { ...matched.user, role: normalizedRole };
                     localStorage.setItem('authToken', token);
-                    localStorage.setItem('user', JSON.stringify(matched.user));
-                    setUser(matched.user);
-                    setRole(matched.user.role);
-                    return;
+                    localStorage.setItem('user', JSON.stringify(normalizedUser));
+                    setUser(normalizedUser);
+                    setRole(normalizedRole);
+                    window.dispatchEvent(new Event('auth-session-changed'));
+                    return normalizedUser;
                 }
             } catch (e) {
                 // ignore local storage parse errors

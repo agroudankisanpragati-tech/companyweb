@@ -2,9 +2,11 @@ import mongoose, { Document } from 'mongoose';
 export interface IUser extends Document {
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
     password: string;
     farmSize: number;
+    companyName?: string;
+    businessType?: string;
     location: {
         state: string;
         district: string;
@@ -16,6 +18,8 @@ export interface IUser extends Document {
     soilType: string;
     waterSource: string;
     role: 'farmer' | 'vendor' | 'admin';
+    authProvider?: 'local' | 'google';
+    googleId?: string;
     crops: string[];
     points: number;
     verified: boolean;

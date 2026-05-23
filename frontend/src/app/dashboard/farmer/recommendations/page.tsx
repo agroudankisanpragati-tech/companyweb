@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { FaSeedling, FaSpinner } from 'react-icons/fa';
+import { FaSeedling, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import FarmerHeader from '@/components/FarmerHeader';
+import FarmerFooter from '@/components/FarmerFooter';
+import { useRouter } from 'next/navigation';
 
 type Rec = {
     _id: string;
@@ -23,6 +26,7 @@ export default function RecommendationsPage() {
     const [results, setResults] = useState<Rec[]>([]);
     const [message, setMessage] = useState<string | null>(null);
     const { user } = useAuth();
+    const router = useRouter();
 
     const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -82,11 +86,30 @@ export default function RecommendationsPage() {
         }
     };
 
-    return (
-        <main className="min-h-screen bg-gradient-to-br from-green-50 to-white py-8">
-            <div className="max-w-4xl mx-auto px-4">
+        const handleGoBack = () => {
+                // prefer history back, fallback to dashboard
+                try {
+                        router.back();
+                } catch (e) {
+                        router.push('/dashboard/farmer');
+                }
+        };
+
+        return (
+                <>
+                    <FarmerHeader />
+                    <main className="min-h-screen bg-gradient-to-br from-green-50 to-white py-8">
+                        <div className="max-w-4xl mx-auto px-4">
                 <div className="bg-white rounded-2xl shadow p-6 md:p-8 mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3"><FaSeedling /> Crop Recommendations</h1>
+                                        <div className="flex items-center justify-between">
+                                            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3"><FaSeedling /> Crop Recommendations</h1>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={handleGoBack} className="px-3 py-2 bg-white border rounded-md text-sm flex items-center gap-2 hover:shadow">
+                                                    <FaArrowLeft />
+                                                    <span>Go back</span>
+                                                </button>
+                                            </div>
+                                        </div>
                     <p className="text-sm text-gray-600 mt-2">Tell us about your farm to get tailored crop suggestions.</p>
 
                     <form onSubmit={handleSubmit} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -168,7 +191,9 @@ export default function RecommendationsPage() {
                         ))
                     )}
                 </div>
-            </div>
-        </main>
+                        </div>
+                    </main>
+                    <FarmerFooter />
+                </>
     );
 }

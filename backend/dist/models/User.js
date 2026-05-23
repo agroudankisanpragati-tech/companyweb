@@ -38,9 +38,11 @@ const mongoose_1 = __importStar(require("mongoose"));
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    phone: { type: String, required: true },
+    phone: { type: String, default: '' },
     password: { type: String, required: true },
     farmSize: { type: Number, required: true },
+    companyName: { type: String },
+    businessType: { type: String },
     location: {
         state: { type: String, required: true },
         district: { type: String, required: true },
@@ -52,6 +54,8 @@ const userSchema = new mongoose_1.Schema({
     soilType: { type: String },
     waterSource: { type: String },
     role: { type: String, enum: ['farmer', 'vendor', 'admin'], default: 'farmer' },
+    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+    googleId: { type: String },
     crops: [String],
     points: { type: Number, default: 0 },
     verified: { type: Boolean, default: false },

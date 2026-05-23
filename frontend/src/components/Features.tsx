@@ -39,9 +39,9 @@ const features: Feature[] = [
       'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80',
   },
   {
-    title: 'Direct Farmer Marketplace',
+    title: 'Mandi Bhav',
     description:
-      'Sell crops, vegetables, fruits, livestock, and organic products directly to buyers without middlemen.',
+      'Check live mandi prices and compare market rates before deciding when and where to sell your produce.',
     image:
       'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1200&q=80',
   },

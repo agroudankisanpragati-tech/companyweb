@@ -19,6 +19,7 @@ const blogs_1 = __importDefault(require("./routes/blogs"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
 const schemes_1 = __importDefault(require("./routes/schemes"));
 const shops_1 = __importDefault(require("./routes/shops"));
+const rewards_1 = __importDefault(require("./routes/rewards"));
 const bootstrapAdmin_1 = require("./utils/bootstrapAdmin");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -70,6 +71,7 @@ app.use('/api/blogs', blogs_1.default);
 app.use('/api/gallery', gallery_1.default);
 app.use('/api/schemes', schemes_1.default);
 app.use('/api/shops', shops_1.default);
+app.use('/api/rewards', rewards_1.default);
 // Health Check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Kisan Unnati Backend is running' });

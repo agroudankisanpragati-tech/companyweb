@@ -7,10 +7,25 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth, type UserRole } from '@/context/AuthContext';
 
+const roleTheme: Record<UserRole, { accent: string; panel: string; label: string; soft: string }> = {
+    farmer: {
+        accent: 'from-green-600 to-emerald-700',
+        panel: 'border-green-300/30',
+        label: 'Farmer Login',
+        soft: 'text-green-200',
+    },
+    shopkeeper: {
+        accent: 'from-blue-600 to-cyan-700',
+        panel: 'border-blue-300/30',
+        label: 'Shopkeeper Login',
+        soft: 'text-blue-200',
+    },
+};
+
 export default function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const roleParam = ((searchParams?.get('role') as UserRole) || 'farmer');
+    const roleParam: UserRole = searchParams?.get('role') === 'shopkeeper' ? 'shopkeeper' : 'farmer';
 
     const { login, isLoading } = useAuth();
     const [email, setEmail] = useState('');
@@ -19,11 +34,7 @@ export default function LoginContent() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const roleInfo = {
-        farmer: 'Farmer Login',
-        shopkeeper: 'Shopkeeper Login',
-        agribusiness: 'Agribusiness Company Login',
-    };
+    const theme = roleTheme[roleParam];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,10 +46,11 @@ export default function LoginContent() {
                 throw new Error('Please enter your email and password');
             }
 
-            await login(email, password);
-            router.push(`/dashboard/${roleParam}`);
+            const user = await login(email, password, roleParam);
+            router.push(`/dashboard/${user.role}`);
         } catch (err: any) {
-            setError(err.message || 'Login failed. Please try again.');
+            const message = err?.message || 'Login failed. Please try again.';
+            setError(message === 'Invalid credentials' ? 'Account not found or wrong password. Please register first.' : message);
         } finally {
             setLoading(false);
         }
@@ -50,7 +62,7 @@ export default function LoginContent() {
             <div className="fixed inset-0 z-0 bg-black/40" />
             <div className="w-full max-w-md px-4 relative z-10">
                 {/* Card */}
-                <div className="relative overflow-hidden rounded-2xl border border-white/30 shadow-2xl max-h-[92dvh]">
+                <div className={`relative overflow-hidden rounded-2xl border ${theme.panel} shadow-2xl max-h-[92dvh]`}>
                     <div className="absolute inset-0 bg-[url('/background%20img.jpg')] bg-cover bg-center" />
                     <div className="absolute inset-0 bg-black/45" />
 
@@ -63,7 +75,7 @@ export default function LoginContent() {
                                 </div>
                                 <div>
                                     <p className="text-[11px] tracking-[0.2em] uppercase text-green-200">Kisan Unnati</p>
-                                    <p className="text-white font-semibold leading-tight">{roleInfo[roleParam]}</p>
+                                    <p className="text-white font-semibold leading-tight">{theme.label}</p>
                                 </div>
                             </div>
                         </div>
@@ -122,10 +134,21 @@ export default function LoginContent() {
                             <button
                                 type="submit"
                                 disabled={loading || isLoading}
-                                className="w-full py-2.5 px-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 text-sm md:text-base min-h-10"
+                                className={`w-full py-2.5 px-4 bg-gradient-to-r ${theme.accent} text-white font-semibold rounded-lg hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 text-sm md:text-base min-h-10`}
                             >
                                 {loading || isLoading ? 'Signing in...' : 'Sign In'}
                             </button>
+
+                            {/* Google Sign-in */}
+                            <a
+                                href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/google?role=${roleParam}`}
+                                className="w-full mt-2 inline-flex items-center justify-center gap-2 py-2.5 px-4 border border-white/30 rounded-lg bg-white/10 text-white hover:bg-white/15 transition text-sm md:text-base"
+                            >
+                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M21.35 11.1h-9.18v2.92h5.26c-.23 1.55-1.55 4.56-5.26 4.56-3.16 0-5.73-2.61-5.73-5.83s2.57-5.83 5.73-5.83c1.8 0 3 .77 3.69 1.43l2.52-2.42C16.8 3.24 14.58 2.2 11.7 2.2 6.91 2.2 3 6.12 3 10.9s3.91 8.7 8.7 8.7c5.02 0 8.36-3.52 8.66-8.5.01-.26.01-.5.0-.0z" fill="currentColor" />
+                                </svg>
+                                Continue with Google
+                            </a>
 
                             {/* Divider */}
                             <div className="relative my-3">
@@ -140,7 +163,7 @@ export default function LoginContent() {
                             {/* Sign Up Link */}
                             <Link
                                 href={`/auth/register?role=${roleParam}`}
-                                className="block w-full py-2.5 px-4 border-2 border-green-300 text-green-100 font-semibold rounded-lg text-center hover:bg-white/10 transition-all text-sm md:text-base min-h-10 flex items-center justify-center"
+                                className={`block w-full py-2.5 px-4 border-2 ${roleParam === 'shopkeeper' ? 'border-blue-300 text-blue-100' : 'border-green-300 text-green-100'} font-semibold rounded-lg text-center hover:bg-white/10 transition-all text-sm md:text-base min-h-10 flex items-center justify-center`}
                             >
                                 Create New Account
                             </Link>

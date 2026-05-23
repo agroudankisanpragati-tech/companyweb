@@ -3,10 +3,20 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaBell, FaCloud, FaHome } from 'react-icons/fa';
+import { FaBell, FaCloud, FaHome, FaArrowLeft } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 import WeatherWidget from './WeatherWidget';
 
 export default function Page() {
+    const router = useRouter();
+
+    const handleGoBack = () => {
+        try {
+            router.back();
+        } catch (e) {
+            router.push('/dashboard/farmer');
+        }
+    };
     return (
         <>
             
@@ -36,6 +46,10 @@ export default function Page() {
                             </div>
                         </div>
                             <div className="flex flex-wrap items-center gap-2">
+                                <button onClick={handleGoBack} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur transition hover:bg-white/15">
+                                    <FaArrowLeft className="text-[0.8rem]" />
+                                    Go back
+                                </button>
                                 <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/95 backdrop-blur transition hover:bg-white/15">
                                     <FaHome className="text-[0.8rem]" />
                                     Home

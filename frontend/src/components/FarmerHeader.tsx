@@ -22,19 +22,19 @@ export default function FarmerHeader() {
 
   return (
     <>
-      <header className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0 flex items-center justify-between" style={{ height: '61px' }}>
+      <header className="bg-white/75 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0 flex items-center justify-between" style={{ height: '76px' }}>
           <div className="flex items-center gap-4">
             <div className="flex-none">
-              <div className="w-24 h-full overflow-hidden bg-white/0 flex items-center justify-center">
-                <img src="/logo.png" alt="logo" className="h-full w-auto object-contain scale-105" />
+              <div className="w-28 h-full overflow-visible bg-white/0 flex items-center justify-center">
+                <img src="/logo.png" alt="logo" className="h-12 md:h-16 w-auto object-contain" />
               </div>
             </div>
 
             <div className="flex-1">
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-gray-900">Farmer Dashboard</h1>
-                <p className="text-xs md:text-sm text-gray-600">Welcome, Rohit Sharma</p>
+                <h1 className="text-lg md:text-2xl font-extrabold text-gray-900">Farmer Dashboard</h1>
+                <p className="text-sm md:text-sm text-gray-600">Welcome back, <span className="font-semibold">{user?.name ?? 'Farmer'}</span></p>
               </div>
             </div>
           </div>
@@ -43,11 +43,11 @@ export default function FarmerHeader() {
             <button
               onClick={() => setOpenProfile(true)}
               title="Profile"
-              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-gray-200"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-green-200 to-green-400 flex items-center justify-center text-white hover:from-green-300 hover:to-green-500 shadow"
             >
-              {(user as any)?.photo ? (
+              {(user as any)?.avatar || (user as any)?.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={(user as any).photo} alt="avatar" className="w-9 h-9 rounded-full object-cover" />
+                <img src={(user as any).avatar || (user as any).photo} alt={user?.name || 'avatar'} className="w-9 h-9 rounded-full object-cover border-2 border-white" />
               ) : (
                 <span className="font-semibold">{initials}</span>
               )}

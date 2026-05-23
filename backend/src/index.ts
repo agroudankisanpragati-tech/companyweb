@@ -14,6 +14,7 @@ import blogRoutes from './routes/blogs';
 import galleryRoutes from './routes/gallery';
 import schemeRoutes from './routes/schemes';
 import shopRoutes from './routes/shops';
+import rewardsRoutes from './routes/rewards';
 import { ensureBootstrapAdmin } from './utils/bootstrapAdmin';
 
 dotenv.config();
@@ -76,6 +77,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/shops', shopRoutes);
+app.use('/api/rewards', rewardsRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

@@ -7,7 +7,7 @@ const services = [
   { title: "Direct Farmer Marketplace", img: "/img/2.png" },
   { title: "Weather Intelligence", img: "/img/3.png" },
   { title: "Disease Detection", img: "/img/4.png" },
-  { title: "Gamified Learning", img: "/img/5.png" },
+  { title: "Farm Profit/Loss Calculator", img: "/img/5.png" },
   { title: "Government Scheme Help", img: "/img/6.png" },
   { title: "Organic Support", img: "/img/7.png" },
   { title: "Community Learning", img: "/img/8.png" },
@@ -36,7 +36,7 @@ export default function Page() {
                 <div>Direct Farmer Marketplace</div>
                 <div>Weather Intelligence</div>
                 <div>Disease Detection</div>
-                <div>Gamified Learning</div>
+                <div>Farm Profit/Loss Calculator</div>
                 <div>Government Scheme Help</div>
                 <div>Organic Support</div>
                 <div>Community Learning</div>

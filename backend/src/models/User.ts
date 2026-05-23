@@ -3,9 +3,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUser extends Document {
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   password: string;
   farmSize: number;
+  companyName?: string;
+  businessType?: string;
   location: {
     state: string;
     district: string;
@@ -17,6 +19,8 @@ export interface IUser extends Document {
   soilType: string;
   waterSource: string;
   role: 'farmer' | 'vendor' | 'admin';
+  authProvider?: 'local' | 'google';
+  googleId?: string;
   crops: string[];
   points: number;
   verified: boolean;
@@ -28,9 +32,11 @@ const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    phone: { type: String, required: true },
+    phone: { type: String, default: '' },
     password: { type: String, required: true },
     farmSize: { type: Number, required: true },
+    companyName: { type: String },
+    businessType: { type: String },
     location: {
       state: { type: String, required: true },
       district: { type: String, required: true },
@@ -42,6 +48,8 @@ const userSchema = new Schema<IUser>(
     soilType: { type: String },
     waterSource: { type: String },
     role: { type: String, enum: ['farmer', 'vendor', 'admin'], default: 'farmer' },
+    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
+    googleId: { type: String },
     crops: [String],
     points: { type: Number, default: 0 },
     verified: { type: Boolean, default: false },
