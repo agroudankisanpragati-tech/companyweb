@@ -1,6 +1,4 @@
 import ShopSearch from "../../components/ShopSearch";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
 
 export const metadata = {
     title: "Shops - Agroudan",
@@ -9,8 +7,6 @@ export const metadata = {
 export default function ShopsPage() {
     return (
         <>
-            <Navbar />
-
             <main className="section-container py-8">
                 <h1 className="text-2xl font-bold mb-4">Shops Near You</h1>
 
@@ -24,7 +20,6 @@ export default function ShopsPage() {
                 </div>
             </main>
 
-            <Footer />
         </>
     );
 }

@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+// Header/Footer are shown only on the home page.
 import { fetchPublishedBlogs } from '@/services/blog';
 
 const formatDate = (value?: string) => {
@@ -53,7 +52,6 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         <main className="relative min-h-screen">
             <div className="absolute inset-0 -z-10" style={{ backgroundImage: "url('/blogbg.png')", backgroundAttachment: 'fixed', backgroundSize: 'cover', backgroundPosition: 'center' }} />
             <div className="relative z-0">
-                <Navbar />
 
                 <section className="bg-transparent py-6 md:py-8">
                     <div className="section-container">

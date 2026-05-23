@@ -4,13 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaBell, FaCloud, FaHome } from 'react-icons/fa';
-import TopBar from '@/components/TopBar';
 import WeatherWidget from './WeatherWidget';
 
 export default function Page() {
     return (
         <>
-            <TopBar />
+            
             <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(245,158,11,0.16),_transparent_28%),linear-gradient(180deg,_#f8fdf7_0%,_#f2fbf5_42%,_#eef7ee_100%)]">
                 <div className="pointer-events-none absolute inset-0 opacity-60">
                     <div className="absolute -left-16 top-24 h-40 w-40 rounded-full bg-emerald-300/30 blur-3xl" />

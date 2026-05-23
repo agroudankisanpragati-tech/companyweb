@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { mandiApi, MandiPrice } from '@/services/mandibav';
 
 export default function MandiPricesPage() {
@@ -31,7 +28,6 @@ export default function MandiPricesPage() {
 
     return (
         <main className="min-h-screen bg-white">
-            <Navbar />
             <section className="section-container py-8 md:py-12">
                 <h1 className="text-2xl md:text-3xl font-bold px-4">Mandi Bhav (Market Prices)</h1>
                 <p className="mt-2 text-slate-600 text-sm md:text-base px-4">Search commodity prices from configured mandi API.</p>
@@ -92,7 +88,7 @@ export default function MandiPricesPage() {
                     )}
                 </div>
             </section>
-            <Footer />
+            
         </main>
     );
 }

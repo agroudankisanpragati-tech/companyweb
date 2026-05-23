@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+// Header and footer are rendered per-page (home uses them). Keep layout minimal.
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-white text-gray-900">
         <AuthProvider>
-          {children}
+          <main className="min-h-screen">
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

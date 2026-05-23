@@ -1,6 +1,4 @@
-import TopBar from '@/components/TopBar';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+// Header/Footer moved to layout (home-only). Removed per-page header/footer.
 import { fetchPublishedGallery } from '@/services/gallery';
 
 const formatDate = (value?: string) => {
@@ -28,8 +26,6 @@ export default async function GalleryPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-green-50">
-            <TopBar />
-            <Navbar />
 
             <section className="relative overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.2),transparent_45%),radial-gradient(circle_at_80%_15%,rgba(245,158,11,0.18),transparent_40%)] py-16">
                 <div className="section-container">
@@ -109,7 +105,7 @@ export default async function GalleryPage() {
                 </section>
             </section>
 
-            <Footer />
+            
         </main>
     );
 }

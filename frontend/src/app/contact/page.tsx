@@ -1,4 +1,3 @@
-import TopBar from '@/components/TopBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FaEnvelope, FaMapMarkerAlt, FaPhoneAlt, FaRegClock, FaWhatsapp } from 'react-icons/fa';
@@ -30,8 +29,6 @@ const supportChannels = [
 export default function ContactPage() {
     return (
         <main className="min-h-screen bg-gradient-to-b from-amber-50 via-lime-50 to-white">
-            <Navbar />
-
             <section className="relative overflow-hidden">
                 <div className="pointer-events-none absolute -left-24 -top-20 h-72 w-72 rounded-full bg-yellow-300/20 blur-3xl" />
                 <div className="pointer-events-none absolute -right-20 top-20 h-80 w-80 rounded-full bg-green-300/20 blur-3xl" />

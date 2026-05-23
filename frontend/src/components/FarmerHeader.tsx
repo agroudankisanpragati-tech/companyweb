@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+// use plain <img> for logo to avoid Next/Image sizing wrapper
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -23,15 +23,18 @@ export default function FarmerHeader() {
   return (
     <>
       <header className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0 flex items-center justify-between" style={{ height: '61px' }}>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-md overflow-hidden bg-white/0 flex items-center justify-center">
-                <Image src="/logo.png" alt="logo" width={40} height={40} className="object-contain" />
+            <div className="flex-none">
+              <div className="w-24 h-full overflow-hidden bg-white/0 flex items-center justify-center">
+                <img src="/logo.png" alt="logo" className="h-full w-auto object-contain scale-105" />
               </div>
+            </div>
+
+            <div className="flex-1">
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Farmer Dashboard</h1>
-                <p className="text-sm text-gray-600">Welcome, Rohit Sharma</p>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900">Farmer Dashboard</h1>
+                <p className="text-xs md:text-sm text-gray-600">Welcome, Rohit Sharma</p>
               </div>
             </div>
           </div>

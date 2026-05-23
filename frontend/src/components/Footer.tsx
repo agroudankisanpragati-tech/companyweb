@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaFacebook, FaTwitter, FaYoutube, FaInstagram, FaLeaf, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaFacebook, FaYoutube, FaInstagram, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -14,17 +15,17 @@ export default function Footer() {
         { label: 'Features', href: '#' },
         { label: 'Pricing', href: '#' },
         { label: 'Security', href: '#' },
-        { label: 'Blog', href: '/blog' },
         { label: 'Gallery', href: '/gallery' },
       ]
     },
     {
       title: 'Company',
       links: [
-        { label: 'About', href: '#' },
+        { label: 'About', href: '/about' },
         { label: 'Careers', href: '/careers' },
         { label: 'Press', href: '#' },
         { label: 'Contact', href: '/contact' },
+        { label: 'Blog', href: '/blog' },
       ]
     },
     {
@@ -39,113 +40,130 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-gradient-to-br from-green-900 via-emerald-900 to-green-800 text-gray-200 pt-[3.2rem] pb-[1.6rem] overflow-hidden">
+    <footer className="relative bg-gradient-to-b from-white via-green-100 to-green-500 text-green-950 pt-8 pb-4 overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-green-700/20 rounded-full filter blur-3xl -translate-x-1/3 -translate-y-1/3 animate-pulse" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-700/20 rounded-full filter blur-3xl translate-x-1/3 translate-y-1/3 animate-pulse" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-white/80 rounded-full filter blur-3xl -translate-x-1/3 -translate-y-1/3 animate-pulse" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-600/35 rounded-full filter blur-3xl translate-x-1/3 translate-y-1/3 animate-pulse" />
 
-      <div className="section-container relative z-10">
-        {/* Main Content */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6 mb-6 md:mb-10">
-          {/* Brand Section */}
-          <div className="col-span-2 md:col-span-1 group">
-            <div className="mb-3 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-green-500/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300" />
-              <Image
-                src="/logo.png"
-                alt="Kisan Unnati Logo"
-                width={56}
-                height={56}
-                className="rounded-lg relative z-10 group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <FaLeaf className="text-yellow-400 animate-bounce" />
-                Kisan Unnati
-              </h3>
-              <p className="text-sm leading-relaxed text-green-100">
-                Smart farming, smart income. Empowering Indian farmers with AI-driven solutions.
-              </p>
-              <div className="space-y-1.5 text-xs text-green-200">
-                <div className="flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                  <FaPhone size={14} />
-                  <span>+91 XXXX XXXX</span>
+      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-3 sm:px-4 lg:px-6">
+        <div className="rounded-3xl border border-white/70 bg-white/75 shadow-2xl backdrop-blur-xl p-4 md:p-5">
+          {/* Main Content */}
+          <div className="grid gap-4 md:grid-cols-12 md:gap-5">
+            {/* Brand Section */}
+            <div className="md:col-span-5 lg:col-span-4 group">
+              <div className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-green-700">
+                Agroudan Kisan Pragati
+              </div>
+
+              <div className="mt-3 rounded-2xl border border-green-100 bg-gradient-to-br from-white to-green-50 p-4 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="relative shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white via-green-100 to-green-500 blur-md opacity-80 scale-110" />
+                    <Image
+                      src="/logo.png"
+                      alt="Agroudan Kisan Pragati Logo"
+                      width={72}
+                      height={72}
+                      className="relative z-10 rounded-2xl"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                  <h3 className="text-xl font-black tracking-tight text-green-950">
+                    Agroudan Kisan Pragati
+                  </h3>
+                  <p className="max-w-sm text-sm leading-6 text-green-900">
+                    Smart farming, smart income. Empowering Indian farmers with AI-driven solutions.
+                  </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                  <FaEnvelope size={14} />
-                  <span>hello@kisan.com</span>
+              </div>
+
+              <div className="mt-3 grid gap-2 text-sm text-green-900">
+                <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-white px-3 py-2.5 shadow-sm">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-green-100 text-green-700">
+                    <FaPhone size={14} />
+                  </span>
+                  <span>+91 6378095181</span>
                 </div>
-                <div className="flex items-center gap-2 hover:text-yellow-300 transition-colors">
-                  <FaMapMarkerAlt size={14} />
-                  <span>India</span>
+                <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-white px-3 py-2.5 shadow-sm">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-green-100 text-green-700">
+                    <FaEnvelope size={14} />
+                  </span>
+                  <span>agroudankisanpragati@gmail.com</span>
+                </div>
+                <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-white px-3 py-2.5 shadow-sm">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-green-100 text-green-700">
+                    <FaMapMarkerAlt size={14} />
+                  </span>
+                  <span>Main Market Barna, Jalsu, Jaipur Rajasthan</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Link Sections */}
-          {sections.map((section) => (
-            <div key={section.title} className="group">
-              <h4 className="text-white font-bold mb-3 text-sm flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full group-hover:scale-150 transition-transform" />
-                {section.title}
-              </h4>
-              <ul className="space-y-1.5 text-sm">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-green-200 hover:text-yellow-300 transition-colors duration-300 relative group/link inline-block"
-                    >
-                      {link.label}
-                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-green-400 group-hover/link:w-full transition-all duration-300" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-green-700/50 my-6" />
-
-        {/* Bottom Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs md:text-sm text-center md:text-left text-green-200">
-            © {currentYear} Kisan Unnati. All rights reserved. | Empowering farmers, building futures.
-          </p>
-
-          {/* Social Links */}
-          <div className="flex gap-4 md:gap-6">
-            {[
-              { icon: FaFacebook, href: '#', label: 'Facebook' },
-              { icon: FaTwitter, href: '#', label: 'Twitter' },
-              { icon: FaYoutube, href: '#', label: 'YouTube' },
-              { icon: FaInstagram, href: '#', label: 'Instagram' },
-            ].map((social) => {
-              const Icon = social.icon;
-              return (
-                <Link
-                  key={social.label}
-                  href={social.href}
-                  aria-label={social.label}
-                  className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-yellow-400 hover:to-green-400 text-green-200 hover:text-white transition-all duration-300 group transform hover:scale-110 hover:-translate-y-1"
+            {/* Link Sections */}
+            <div className="md:col-span-7 lg:col-span-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {sections.map((section) => (
+                <div
+                  key={section.title}
+                  className="rounded-2xl border border-green-100 bg-white/80 p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
                 >
-                  <Icon size={18} className="group-hover:scale-125 transition-transform" />
-                  <span className="absolute inset-0 rounded-full bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-              );
-            })}
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold tracking-wide text-green-950">
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    {section.title}
+                  </h4>
+                  <ul className="space-y-1 text-sm">
+                    {section.links.map((link) => (
+                      <li key={link.label}>
+                        <Link
+                          href={link.href}
+                          className="group/link flex items-center justify-between rounded-xl px-2.5 py-1.5 text-green-900 transition-colors duration-200 hover:bg-green-50 hover:text-green-700"
+                        >
+                          <span>{link.label}</span>
+                          <span className="ml-3 inline-block h-1.5 w-1.5 rounded-full bg-green-300 transition-transform duration-200 group-hover/link:scale-110 group-hover/link:bg-green-500" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Farming Tagline */}
-        <div className="text-center mt-4 pt-4 border-t border-green-700/30">
-          <p className="text-xs text-green-300 italic">
-            🌾 Connecting farmers to technology, markets, and prosperity 🌾
-          </p>
+          {/* Bottom Section */}
+          <div className="mt-4 flex flex-col gap-3 border-t border-green-200 pt-4 md:flex-row md:items-center md:justify-between">
+            <p className="text-center text-xs font-medium text-green-900 md:text-left">
+              © {currentYear} Agroudan Kisan Pragati LLP. All rights reserved. | Empowering farmers, building futures.
+            </p>
+
+            <div className="flex justify-center gap-2 md:justify-end">
+              {[
+                { icon: FaFacebook, href: 'https://www.facebook.com/profile.php?id=61589122658245', label: 'Facebook' },
+                { icon: FaXTwitter, href: 'https://x.com/agroudankisan', label: 'X' },
+                { icon: FaInstagram, href: 'https://www.instagram.com/agroudankisanpragati/', label: 'Instagram' },
+                { icon: FaYoutube, href: 'https://www.youtube.com/@AGROUDANKISANPRAGATI', label: 'YouTube' },
+              ].map((social) => {
+                const Icon = social.icon;
+                return (
+                  <Link
+                    key={social.label}
+                    href={social.href}
+                    aria-label={social.label}
+                    className="relative grid h-10 w-10 place-items-center rounded-full border border-green-200 bg-white text-green-700 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-green-400 hover:bg-green-600 hover:text-white"
+                  >
+                    <Icon size={18} />
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Farming Tagline */}
+          <div className="mt-4 rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 to-white px-4 py-2.5 text-center shadow-sm">
+            <p className="text-xs font-medium italic text-green-900">
+              🌾 Connecting farmers to technology, markets, and prosperity 🌾
+            </p>
+          </div>
         </div>
       </div>
     </footer>

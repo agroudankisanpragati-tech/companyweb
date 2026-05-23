@@ -27,10 +27,8 @@ export default function Navbar() {
     { href: '/weather', label: 'Weather' },
     { href: '/mandi-prices', label: 'Mandi Prices' },
     { href: '/shops', label: 'Shops' },
-    { href: '/blog', label: 'Blog' },
     { href: '/schemes', label: 'Govt Schemes' },
     { href: '/careers', label: 'Careers' },
-    { href: '/#pricing', label: 'Pricing' },
   ];
 
   return (

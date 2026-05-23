@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import TopBar from '@/components/TopBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { fetchPublishedSchemes } from '@/services/schemes';
@@ -26,7 +25,6 @@ export default async function SchemesPage() {
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-lime-50 via-white to-amber-50">
-            <TopBar />
             <Navbar />
 
             <section className="relative overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.22),transparent_45%),radial-gradient(circle_at_80%_15%,rgba(245,158,11,0.2),transparent_40%)] py-16">

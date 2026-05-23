@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+// Header/Footer are shown only on the home page.
 import { fetchBlogBySlug, fetchPublishedBlogs } from '@/services/blog';
 import ShareButtons from '@/components/ShareButtons';
 
@@ -43,7 +42,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         <main className="relative min-h-screen bg-white md:bg-transparent">
             <div className="absolute inset-0 -z-10 hidden md:block" style={{ backgroundImage: "url('/blogbg.png')", backgroundAttachment: 'fixed', backgroundSize: 'cover', backgroundPosition: 'center' }} />
             <div className="absolute inset-0 -z-10 hidden md:block bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.02),transparent_34%),linear-gradient(180deg,rgba(248,250,245,0.1)_0%,rgba(255,255,255,0.05)_48%,rgba(244,249,239,0.1)_100%)]" />
-            <Navbar />
+            
 
             {error || !post ? (
                 <section className="section-container mt-6 md:mt-8 pb-12 relative z-10">
@@ -166,9 +165,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 </>
             )}
 
-            <div className="relative z-10">
-                <Footer />
-            </div>
+            
         </main>
     );
 }

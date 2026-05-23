@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { AiOutlinePlus, AiOutlineMinus } from 'react-icons/ai';
 import { MdRefresh } from 'react-icons/md';
 
@@ -61,7 +62,7 @@ export default function TopBar() {
                     <div className="flex items-center gap-3">
                         <span className="text-xs font-semibold hidden sm:inline">Follow Us:</span>
                         <a
-                            href="https://facebook.com"
+                            href="https://www.facebook.com/profile.php?id=61589122658245"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-110 transition-transform duration-300 p-1 rounded-full hover:bg-white hover:bg-opacity-20"
@@ -70,16 +71,16 @@ export default function TopBar() {
                             <FaFacebook size={14} />
                         </a>
                         <a
-                            href="https://twitter.com"
+                            href="https://x.com/agroudankisan"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-110 transition-transform duration-300 p-1 rounded-full hover:bg-white hover:bg-opacity-20"
-                            aria-label="Twitter"
+                            aria-label="X"
                         >
-                            <FaTwitter size={14} />
+                            <FaXTwitter size={14} />
                         </a>
                         <a
-                            href="https://instagram.com"
+                            href="https://www.instagram.com/agroudankisanpragati/"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-110 transition-transform duration-300 p-1 rounded-full hover:bg-white hover:bg-opacity-20"
@@ -88,13 +89,13 @@ export default function TopBar() {
                             <FaInstagram size={14} />
                         </a>
                         <a
-                            href="https://www.linkedin.com/company/agroudan-kisan-pragati"
+                            href="https://www.youtube.com/@AGROUDANKISANPRAGATI"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="hover:scale-110 transition-transform duration-300 p-1 rounded-full hover:bg-white hover:bg-opacity-20"
-                            aria-label="LinkedIn"
+                            aria-label="YouTube"
                         >
-                            <FaLinkedin size={14} />
+                            <FaYoutube size={14} />
                         </a>
                     </div>
 
