@@ -1,0 +1,156 @@
+.wrapper {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(209, 250, 229, 0.8);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.16), transparent 36%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(236, 253, 245, 0.96));
+  box-shadow: 0 24px 70px rgba(16, 185, 129, 0.12);
+}
+
+.wrapper::after {
+  content: '';
+  position: absolute;
+  inset: auto -10% -40% auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(132, 204, 22, 0.16), transparent 68%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgb(4, 120, 87);
+}
+
+.title {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.05;
+  font-weight: 800;
+  color: rgb(17, 24, 39);
+}
+
+.subtitle {
+  max-width: 52rem;
+  color: rgb(75, 85, 99);
+}
+
+.statsGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statCard {
+  border: 1px solid rgba(209, 250, 229, 0.95);
+  border-radius: 24px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 45px rgba(16, 185, 129, 0.12);
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgb(75, 85, 99);
+}
+
+.statValue {
+  margin-top: 0.4rem;
+  font-size: 1.65rem;
+  line-height: 1;
+  font-weight: 800;
+  color: rgb(17, 24, 39);
+}
+
+.statHint {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: rgb(22, 163, 74);
+}
+
+.linksGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.linkCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.95rem;
+  min-height: 100%;
+  padding: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  color: white;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.linkCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+.linkIcon {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.linkTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.linkDescription {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgb(17, 24, 39);
+}
+
+@media (max-width: 1024px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .linksGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .wrapper {
+    border-radius: 24px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
