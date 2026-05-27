@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export type UserRole = 'farmer' | 'shopkeeper';
 
@@ -18,6 +18,8 @@ interface AuthContextType {
     role: UserRole | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    requestEmailOtp: (email: string) => Promise<{ delivered?: boolean; devOtp?: string }>;
+    verifyEmailOtp: (email: string, otp: string) => Promise<void>;
     login: (email: string, password: string, preferredRole?: UserRole) => Promise<User>;
     register: (userData: RegisterData, preferredRole?: UserRole) => Promise<User>;
     logout: () => void;
@@ -27,11 +29,15 @@ export interface RegisterData {
     name: string;
     email: string;
     password: string;
-    phone: string;
     role: UserRole;
-    farmSize?: string;
-    location?: string;
+    phone?: string;
+    companyName?: string;
+    shopName?: string;
     businessType?: string;
+    location?: string;
+    farmSize?: string;
+    soilType?: string;
+    waterSource?: string;
 }
 
 const normalizeRole = (role: unknown): UserRole => {
@@ -59,9 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const normalizedUser = { ...parsedUser, role: normalizedRole };
             setUser(normalizedUser);
             setRole(normalizedRole);
+
             if (normalizedRole !== parsedUser.role) {
                 localStorage.setItem('user', JSON.stringify(normalizedUser));
             }
+
             return;
         }
 
@@ -69,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(null);
     };
 
-    // Load user from localStorage on mount
     useEffect(() => {
         syncFromStorage();
         setIsLoading(false);
@@ -82,101 +89,113 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('auth-session-changed', handleAuthSessionChange);
     }, []);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.agroudankisanpragati.com/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-    const register = async (userData: RegisterData, preferredRole?: UserRole): Promise<User> => {
+    const requestEmailOtp = async (email: string) => {
+        setIsLoading(true);
         try {
-            setIsLoading(true);
+            const res = await fetch(`${apiBase}/auth/register/request-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
 
-            // Try server registration first
-            try {
-                // Map frontend fields to backend expected shape where possible
-                const payload: any = {
-                    name: userData.name,
-                    email: userData.email,
-                    phone: userData.phone,
-                    password: userData.password,
-                    role: toBackendRole(userData.role),
-                };
-
-                // farmSize may be provided as string; convert to number if possible
-                if (userData.farmSize) {
-                    const n = parseFloat(userData.farmSize as any);
-                    payload.farmSize = Number.isNaN(n) ? 0 : n;
-                } else {
-                    payload.farmSize = 0;
-                }
-
-                // Location: backend expects object; try to map a simple string to state
-                if (userData.location && typeof userData.location === 'string') {
-                    payload.location = {
-                        state: userData.location,
-                        district: '',
-                        coordinates: { latitude: 0, longitude: 0 },
-                    };
-                }
-
-                const res = await fetch(`${apiBase}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const normalizedRole = normalizeRole(preferredRole || data.user?.role || userData.role);
-                    const newUser: User = {
-                        id: data.user?.id || data.user?._id || Date.now().toString(),
-                        email: data.user?.email || userData.email,
-                        name: data.user?.name || userData.name,
-                        role: normalizedRole,
-                        phone: data.user?.phone || userData.phone,
-                    };
-
-                    localStorage.setItem('user', JSON.stringify(newUser));
-                    if (data.token) localStorage.setItem('authToken', data.token);
-                    setUser(newUser);
-                    setRole(newUser.role);
-                    window.dispatchEvent(new Event('auth-session-changed'));
-                    return newUser;
-                }
-                // if server returned error, fallthrough to local fallback
-            } catch (err) {
-                // server not reachable or error - we'll fallback to localStorage simulation
-                // console.warn('Server register failed, falling back to local:', err);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to send OTP');
             }
 
-            // Local fallback (legacy behavior)
-            const newUser: User = {
-                id: Date.now().toString(),
-                email: userData.email,
+            return data;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const verifyEmailOtp = async (email: string, otp: string) => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${apiBase}/auth/register/verify-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp }),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'OTP verification failed');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const register = async (userData: RegisterData, preferredRole?: UserRole): Promise<User> => {
+        setIsLoading(true);
+
+        try {
+            const payload: Record<string, unknown> = {
                 name: userData.name,
-                role: normalizeRole(preferredRole || userData.role),
-                phone: userData.phone,
+                email: userData.email,
+                password: userData.password,
+                role: toBackendRole(userData.role),
+                authProvider: 'local',
             };
 
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 300));
+            if (userData.phone) {
+                payload.phone = userData.phone;
+            }
 
-            const token = `token_${Date.now()}`;
-            // persist main user for session
+            if (userData.companyName || userData.shopName) {
+                payload.companyName = userData.companyName || userData.shopName;
+            }
+
+            if (userData.businessType) {
+                payload.businessType = userData.businessType;
+            }
+
+            if (userData.location) {
+                payload.location = userData.location;
+            }
+
+            if (userData.farmSize) {
+                payload.farmSize = userData.farmSize;
+            }
+
+            if (userData.soilType) {
+                payload.soilType = userData.soilType;
+            }
+
+            if (userData.waterSource) {
+                payload.waterSource = userData.waterSource;
+            }
+
+            const res = await fetch(`${apiBase}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'Registration failed');
+            }
+
+            const normalizedRole = normalizeRole(preferredRole || data.user?.role || userData.role);
+            const newUser: User = {
+                id: data.user?.id || data.user?._id || Date.now().toString(),
+                email: data.user?.email || userData.email,
+                name: data.user?.name || userData.name,
+                role: normalizedRole,
+                phone: data.user?.phone || userData.phone,
+            };
+
             localStorage.setItem('user', JSON.stringify(newUser));
-            localStorage.setItem('authToken', token);
-            localStorage.setItem(`userData_${userData.role}`, JSON.stringify(userData));
-
-            // Also keep a localUsers list so users created via fallback can login after logout
-            try {
-                const raw = localStorage.getItem('localUsers');
-                const localUsers: Array<any> = raw ? JSON.parse(raw) : [];
-                // store minimal info for fallback login (email + password + profile)
-                localUsers.push({ email: userData.email, password: userData.password, user: newUser });
-                localStorage.setItem('localUsers', JSON.stringify(localUsers));
-            } catch (e) {
-                // ignore local storage errors
+            if (data.token) {
+                localStorage.setItem('authToken', data.token);
             }
 
             setUser(newUser);
-            setRole(userData.role);
+            setRole(newUser.role);
             window.dispatchEvent(new Event('auth-session-changed'));
             return newUser;
         } finally {
@@ -185,64 +204,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const login = async (email: string, password: string, preferredRole?: UserRole): Promise<User> => {
+        setIsLoading(true);
+
         try {
-            setIsLoading(true);
+            const res = await fetch(`${apiBase}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
 
-            // Try server login first
-            try {
-                const res = await fetch(`${apiBase}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const normalizedRole = normalizeRole(preferredRole || data.user?.role);
-                    const loggedUser: User = {
-                        id: data.user?.id || data.user?._id || Date.now().toString(),
-                        email: data.user?.email,
-                        name: data.user?.name,
-                        role: normalizedRole,
-                        phone: data.user?.phone,
-                    };
-
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('user', JSON.stringify(loggedUser));
-                    setUser(loggedUser);
-                    setRole(loggedUser.role);
-                    window.dispatchEvent(new Event('auth-session-changed'));
-                    return loggedUser;
-                }
-            } catch (err) {
-                // server not reachable or error - fallback to localStorage
-                // console.warn('Server login failed, falling back to local:', err);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || 'Login failed');
             }
 
-            // Local fallback (legacy behavior)
-            await new Promise(resolve => setTimeout(resolve, 300));
+            const normalizedRole = normalizeRole(preferredRole || data.user?.role);
+            const loggedUser: User = {
+                id: data.user?.id || data.user?._id || Date.now().toString(),
+                email: data.user?.email,
+                name: data.user?.name,
+                role: normalizedRole,
+                phone: data.user?.phone,
+            };
 
-            // Check localUsers list for accounts created via fallback
-            try {
-                const raw = localStorage.getItem('localUsers');
-                const localUsers: Array<any> = raw ? JSON.parse(raw) : [];
-                const matched = localUsers.find(u => u.email === email && u.password === password);
-                if (matched) {
-                    const token = `token_${Date.now()}`;
-                    const normalizedRole = normalizeRole(preferredRole || matched.user?.role);
-                    const normalizedUser = { ...matched.user, role: normalizedRole };
-                    localStorage.setItem('authToken', token);
-                    localStorage.setItem('user', JSON.stringify(normalizedUser));
-                    setUser(normalizedUser);
-                    setRole(normalizedRole);
-                    window.dispatchEvent(new Event('auth-session-changed'));
-                    return normalizedUser;
-                }
-            } catch (e) {
-                // ignore local storage parse errors
-            }
-
-            throw new Error('Invalid credentials');
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(loggedUser));
+            setUser(loggedUser);
+            setRole(loggedUser.role);
+            window.dispatchEvent(new Event('auth-session-changed'));
+            return loggedUser;
         } finally {
             setIsLoading(false);
         }
@@ -262,6 +252,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role,
                 isLoading,
                 isAuthenticated: !!user,
+                requestEmailOtp,
+                verifyEmailOtp,
                 login,
                 register,
                 logout,

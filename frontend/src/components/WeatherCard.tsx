@@ -7,7 +7,8 @@ type Weather = {
         temp?: number;
         humidity?: number;
         wind_speed?: number;
-        weather?: { main?: string; description?: string; icon?: string } | null;
+        wind_kph?: number;
+        weather?: { main?: string; text?: string; description?: string; icon?: string } | null;
     };
     daily?: Array<any>;
     hourly?: Array<any>;
@@ -25,12 +26,14 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
     if (!data) return <div className="p-8 bg-white rounded-lg shadow">No weather data available</div>;
 
     const cur = data.current || {};
-    const icon = cur.weather?.icon ? `https://openweathermap.org/img/wn/${cur.weather.icon}@4x.png` : null;
+    const icon = resolveWeatherIcon(cur.weather?.icon);
 
     const tempC = cur.temp ?? 0;
     const tempF = (tempC * 9 / 5) + 32;
     const displayTemp = isCelsius ? tempC : tempF;
     const unit = isCelsius ? '°C' : '°F';
+
+    const currentLabel = cur.weather?.main || cur.weather?.text || cur.weather?.description || '—';
 
     const getWeatherGradient = (weather?: string) => {
         switch (weather?.toLowerCase()) {
@@ -39,20 +42,36 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
                 return 'from-amber-400 via-yellow-500 to-lime-500';
             case 'clouds':
             case 'cloudy':
+            case 'partly cloudy':
+            case 'overcast':
+            case 'mist':
+            case 'fog':
                 return 'from-slate-500 to-emerald-700';
             case 'rain':
+            case 'light rain':
+            case 'moderate rain':
+            case 'heavy rain':
+            case 'drizzle':
                 return 'from-emerald-600 to-teal-800';
             case 'thunderstorm':
+            case 'storm':
                 return 'from-slate-800 to-emerald-900';
             default:
                 return 'from-emerald-500 to-lime-600';
         }
     };
 
+    function resolveWeatherIcon(icon?: string) {
+        if (!icon) return null;
+        if (icon.startsWith('//')) return `https:${icon}`;
+        if (icon.startsWith('http://') || icon.startsWith('https://')) return icon;
+        return `https://openweathermap.org/img/wn/${icon}@4x.png`;
+    }
+
     return (
         <div className="w-full space-y-6">
             {/* Current Weather - Large Card */}
-            <div className={`bg-gradient-to-br ${getWeatherGradient(cur.weather?.main)} rounded-[2rem] p-6 md:p-8 text-white shadow-[0_24px_70px_rgba(15,118,110,0.22)] transition hover:shadow-[0_28px_80px_rgba(15,118,110,0.28)]`}>
+            <div className={`bg-gradient-to-br ${getWeatherGradient(currentLabel)} rounded-[2rem] p-6 md:p-8 text-white shadow-[0_24px_70px_rgba(15,118,110,0.22)] transition hover:shadow-[0_28px_80px_rgba(15,118,110,0.28)]`}>
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <p className="text-sm font-medium opacity-90">{location}</p>
@@ -63,8 +82,8 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
 
                 <div className="mb-6">
                     <div className="text-5xl md:text-6xl font-black tracking-tight">{Math.round(displayTemp)}{unit}</div>
-                    <p className="text-lg md:text-xl font-semibold opacity-95 capitalize">{cur.weather?.main || '—'}</p>
-                    <p className="text-sm opacity-80 capitalize">{cur.weather?.description || ''}</p>
+                    <p className="text-lg md:text-xl font-semibold opacity-95 capitalize">{currentLabel}</p>
+                    <p className="text-sm opacity-80 capitalize">{cur.weather?.description || cur.weather?.text || ''}</p>
                 </div>
 
                 {/* Weather Details Grid */}
@@ -81,7 +100,7 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
                             <FaWind className="text-lg" />
                             <span className="text-sm font-medium opacity-80">Wind Speed</span>
                         </div>
-                        <p className="text-2xl font-bold">{(cur.wind_speed ?? 0).toFixed(1)} m/s</p>
+                        <p className="text-2xl font-bold">{(cur.wind_kph ?? cur.wind_speed ?? 0).toFixed(1)} km/h</p>
                     </div>
                 </div>
             </div>
@@ -115,7 +134,7 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
                                 <div className="text-center mb-3">
                                     {d.weather?.icon && (
                                         <img
-                                            src={`https://openweathermap.org/img/wn/${d.weather.icon}@2x.png`}
+                                            src={resolveWeatherIcon(d.weather.icon) || ''}
                                             alt="icon"
                                             className="w-12 h-12 mx-auto"
                                         />
@@ -125,7 +144,7 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
                                     <p className="text-lg font-bold text-emerald-950">
                                         {isCelsius ? Math.round(d.temp?.day || 0) : Math.round((d.temp?.day || 0) * 9 / 5 + 32)}{unit}
                                     </p>
-                                    <p className="text-xs text-emerald-600">{d.weather?.main || '—'}</p>
+                                    <p className="text-xs text-emerald-600">{d.weather?.main || d.weather?.text || '—'}</p>
                                     <p className="text-xs font-medium text-lime-700">💧 {Math.round((d.pop || 0) * 100)}%</p>
                                 </div>
                             </div>
@@ -147,7 +166,7 @@ export default function WeatherCard({ data, isCelsius = true, location = 'Your L
                                     </p>
                                     {h.weather?.icon && (
                                         <img
-                                            src={`https://openweathermap.org/img/wn/${h.weather.icon}@2x.png`}
+                                            src={resolveWeatherIcon(h.weather.icon) || ''}
                                             alt="icon"
                                             className="w-8 h-8 mx-auto mb-1"
                                         />

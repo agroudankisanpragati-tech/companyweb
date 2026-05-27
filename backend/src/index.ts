@@ -17,7 +17,7 @@ import shopRoutes from './routes/shops';
 import rewardsRoutes from './routes/rewards';
 import { ensureBootstrapAdmin } from './utils/bootstrapAdmin';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;

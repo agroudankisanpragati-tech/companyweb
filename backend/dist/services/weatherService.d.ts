@@ -10,7 +10,7 @@ declare class LocationNotFoundError extends Error {
 declare function fetchWeather(lat: string | number, lon: string | number): Promise<any>;
 declare function searchLocations(query: string): Promise<LocationSuggestion[]>;
 declare function fetchWeatherByLocationQuery(query: string): Promise<{
-    location: LocationSuggestion;
+    location: any;
     data: any;
 }>;
 declare const _default: {

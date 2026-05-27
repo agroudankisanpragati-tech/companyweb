@@ -1,5 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import TopBar from '@/components/TopBar';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'About — Agroudan Kisan Pragati',
@@ -7,10 +10,13 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="bg-gradient-to-b from-white to-green-50 py-16">
-      <div className="mx-auto max-w-6xl px-6">
+    <>
+      <TopBar />
+      <Navbar />
+      <main className="bg-gradient-to-b from-white to-green-50 py-16">
+        <div className="mx-auto max-w-6xl px-6">
         {/* Hero */}
-        <section className="grid gap-8 md:grid-cols-2 md:items-center">
+        <section id="company" className="grid gap-8 md:grid-cols-2 md:items-center">
           <div>
             <div className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 mb-4">
               About Us
@@ -63,7 +69,7 @@ export default function AboutPage() {
         </section>
 
         {/* What we do */}
-        <section className="mt-10 grid gap-8 md:grid-cols-3">
+        <section id="services" className="mt-10 grid gap-8 md:grid-cols-3">
           <div className="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-green-900 mb-2">Advisory & Recommendations</h3>
             <p className="text-green-800 text-sm">Crop-specific guidance, pest alerts and optimized input plans to boost yields.</p>
@@ -81,7 +87,7 @@ export default function AboutPage() {
         </section>
 
         {/* Team + Values */}
-        <section className="mt-12 grid gap-8 md:grid-cols-2">
+        <section id="vision-mission-values" className="mt-12 grid gap-8 md:grid-cols-2">
           <div className="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
             <h3 className="text-xl font-semibold text-green-900 mb-4">Our Values</h3>
             <ul className="space-y-3 text-green-800">
@@ -110,8 +116,10 @@ export default function AboutPage() {
           </div>
         </section>
 
-      </div>
-    </main>
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }
 

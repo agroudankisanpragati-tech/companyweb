@@ -93,6 +93,11 @@ export default function FarmerDashboard() {
             ? ((marketPrice - previousMarketPrice) / previousMarketPrice) * 100
             : null;
     const marketIsUp = marketChangePercent === null ? true : marketChangePercent >= 0;
+    const currentWeather = weather?.data?.current ?? weather?.current ?? {};
+    const currentWeatherLabel = currentWeather?.weather?.text || currentWeather?.weather?.main || 'Partly cloudy';
+    const currentWeatherTemp = currentWeather?.temp ?? weather?.data?.current?.temp ?? 32;
+    const currentWeatherHumidity = currentWeather?.humidity ?? 68;
+    const currentWeatherWind = currentWeather?.wind_kph ?? currentWeather?.wind_speed ?? 12;
 
     // Allow preview in development without authentication
     if (!isAuthenticated && process.env.NODE_ENV !== 'development') return null;
@@ -172,9 +177,9 @@ export default function FarmerDashboard() {
                                                     </div>
                                                     <div className="text-left">
                                                         <div className="text-4xl font-extrabold tracking-tight text-slate-800">
-                                                            {weatherLoading ? '—' : `${weather?.temperature ?? 32}°C`}
+                                                            {weatherLoading ? '—' : `${Math.round(currentWeatherTemp)}°C`}
                                                         </div>
-                                                        <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">Partly cloudy</div>
+                                                        <div className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">{currentWeatherLabel}</div>
                                                     </div>
                                                 </div>
 
@@ -185,7 +190,7 @@ export default function FarmerDashboard() {
                                                             Humidity
                                                         </div>
                                                         <div className="mt-1 text-base font-bold text-slate-800">
-                                                            {weatherLoading ? '—' : `${weather?.humidity ?? weather?.relativeHumidity ?? 68}%`}
+                                                            {weatherLoading ? '—' : `${Math.round(currentWeatherHumidity)}%`}
                                                         </div>
                                                     </div>
                                                     <div className="rounded-2xl bg-cyan-50 px-3 py-2 text-left shadow-sm">
@@ -194,7 +199,7 @@ export default function FarmerDashboard() {
                                                             Wind
                                                         </div>
                                                         <div className="mt-1 text-base font-bold text-slate-800">
-                                                            {weatherLoading ? '—' : `${weather?.windSpeed ?? weather?.wind_speed ?? 12} km/h`}
+                                                            {weatherLoading ? '—' : `${Math.round(currentWeatherWind)} km/h`}
                                                         </div>
                                                     </div>
                                                 </div>

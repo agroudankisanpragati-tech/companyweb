@@ -10,19 +10,15 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const navLinks = [
-    { 
-      href: '/#about', 
-      label: 'About', 
-      dropdown: 'about', 
+    {
+      href: '/about',
+      label: 'About',
+      dropdown: 'about',
       items: [
-        { label: 'About Us – Company', href: '/#about-company' },
-        { label: 'Our Operations', href: '/#our-operations' },
-        { label: 'History & Milestones', href: '/#history-milestones' },
-        { label: 'Our Vision, Mission and Values', href: '/#vision-mission-values' },
-        { label: 'Board of Directors', href: '/#board-directors' },
-        { label: 'Top Management', href: '/#top-management' },
-        { label: 'Awards', href: '/#awards' }
-      ] 
+        { label: 'About Us – Company', href: '/about#company' },
+        { label: 'Our Services', href: '/about#services' },
+        { label: 'Our Vision, Mission and Values', href: '/about#vision-mission-values' }
+      ]
     },
     { href: '/weather', label: 'Weather' },
     { href: '/mandi-prices', label: 'Mandi Prices' },

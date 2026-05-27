@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth, type UserRole } from '@/context/AuthContext';
 
 const roleTheme: Record<UserRole, { accent: string; panel: string; label: string; soft: string }> = {
@@ -22,111 +22,161 @@ const roleTheme: Record<UserRole, { accent: string; panel: string; label: string
     },
 };
 
-interface FormData {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    phone: string;
-    role: UserRole;
-    farmSize?: string;
-    location?: string;
-    soilType?: string;
-    businessType?: string;
-    companyName?: string;
-    farmingArea?: string;
-}
+type Mode = 'email' | 'google';
 
 export default function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { register, isLoading } = useAuth();
+    const { requestEmailOtp, verifyEmailOtp, register, isLoading } = useAuth();
 
     const roleParam: UserRole = searchParams?.get('role') === 'shopkeeper' ? 'shopkeeper' : 'farmer';
     const role = roleParam;
-
-    // single-step registration: show all fields at once
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [mounted, setMounted] = useState(false);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const [formData, setFormData] = useState<FormData>({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        role,
-        farmSize: '',
-        location: '',
-        soilType: '',
-        businessType: '',
-        companyName: '',
-        farmingArea: '',
-    });
-
     const theme = roleTheme[role];
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+    const [mode, setMode] = useState<Mode>('email');
+    const [mounted, setMounted] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [devOtp, setDevOtp] = useState('');
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    const [formData, setFormData] = useState({
+        name: '',
+        shopName: '',
+        email: '',
+        otp: '',
+        password: '',
+    });
 
     useEffect(() => {
         const t = setTimeout(() => setMounted(true), 30);
         return () => clearTimeout(t);
     }, []);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    useEffect(() => {
+        setOtpSent(false);
+        setOtpVerified(false);
+        setDevOtp('');
         setError('');
+        setSuccess('');
+        setFormData((prev) => ({ ...prev, otp: '' }));
+    }, [role]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        setError('');
+        setSuccess('');
+
+        if (name === 'email') {
+            setOtpSent(false);
+            setOtpVerified(false);
+            setDevOtp('');
+        }
     };
 
-    const validateAll = () => {
-        if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.location?.trim()) {
-            return 'Please fill all required fields';
+    const googleHref = `${apiBase}/auth/google?role=${role}`;
+
+    const sendOtp = async () => {
+        if (!formData.email.trim()) {
+            setError('Please enter your email first');
+            return;
         }
 
-        if (role === 'farmer' && (!formData.farmSize?.trim() || !formData.soilType?.trim() || !formData.farmingArea?.trim())) {
-            return 'Please fill all farmer fields';
+        setSendingOtp(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            const data = await requestEmailOtp(formData.email.trim());
+            setOtpSent(true);
+            setOtpVerified(false);
+            setSuccess('OTP sent to your email. Enter the code to continue.');
+            setDevOtp(data?.devOtp || '');
+        } catch (err: any) {
+            setError(err?.message || 'Failed to send OTP');
+        } finally {
+            setSendingOtp(false);
+        }
+    };
+
+    const verifyOtp = async () => {
+        if (!formData.email.trim() || !formData.otp.trim()) {
+            setError('Please enter your email and OTP');
+            return;
         }
 
-        if (role === 'shopkeeper' && (!formData.companyName?.trim() || !formData.businessType?.trim())) {
-            return 'Please fill all shopkeeper fields';
-        }
+        setVerifyingOtp(true);
+        setError('');
+        setSuccess('');
 
-        if (!formData.password.trim() || !formData.confirmPassword.trim()) {
-            return 'Please fill password fields';
+        try {
+            await verifyEmailOtp(formData.email.trim(), formData.otp.trim());
+            setOtpVerified(true);
+            setSuccess('Email verified. You can now create your account.');
+        } catch (err: any) {
+            setOtpVerified(false);
+            setError(err?.message || 'OTP verification failed');
+        } finally {
+            setVerifyingOtp(false);
         }
-        if (formData.password.length < 6) {
-            return 'Password must be at least 6 characters';
-        }
-        if (formData.password !== formData.confirmPassword) {
-            return 'Passwords do not match';
-        }
-
-        return '';
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const message = validateAll();
-        if (message) {
-            setError(message);
+
+        if (!formData.name.trim()) {
+            setError('Please enter your name');
             return;
         }
 
+        if (role === 'shopkeeper' && !formData.shopName.trim()) {
+            setError('Please enter your shop name');
+            return;
+        }
+
+        if (!otpVerified) {
+            setError('Please verify your email OTP before registering');
+            return;
+        }
+
+        if (!formData.password.trim()) {
+            setError('Please enter a password');
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters');
+            return;
+        }
+
+        setSubmitting(true);
         setError('');
-        setLoading(true);
 
         try {
-            const user = await register(formData, roleParam);
+            const user = await register(
+                {
+                    name: formData.name.trim(),
+                    email: formData.email.trim(),
+                    password: formData.password,
+                    role,
+                    companyName: role === 'shopkeeper' ? formData.shopName.trim() : undefined,
+                    shopName: role === 'shopkeeper' ? formData.shopName.trim() : undefined,
+                },
+                role
+            );
+
             router.push(`/dashboard/${user.role}`);
         } catch (err: any) {
-            setError(err.message || 'Registration failed. Please try again.');
+            setError(err?.message || 'Registration failed. Please try again.');
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
 
@@ -157,11 +207,38 @@ export default function RegisterContent() {
                             </div>
                         </div>
 
-                        {/* single-step registration — entrance animation and focus effects */}
+                        <div className="mb-3 grid grid-cols-2 gap-2 rounded-xl border border-white/15 bg-white/10 p-1">
+                            <button
+                                type="button"
+                                onClick={() => setMode('email')}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === 'email' ? 'bg-white text-gray-900' : 'text-white/85 hover:bg-white/10'}`}
+                            >
+                                Register with Email
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode('google')}
+                                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === 'google' ? 'bg-white text-gray-900' : 'text-white/85 hover:bg-white/10'}`}
+                            >
+                                Continue with Google
+                            </button>
+                        </div>
 
                         {error && (
-                            <div className="mb-3 p-2.5 rounded-lg bg-red-500/20 border border-red-300/40 text-red-100 text-sm">
+                            <div className="mb-3 rounded-lg border border-red-300/40 bg-red-500/20 p-2.5 text-sm text-red-100">
                                 {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="mb-3 rounded-lg border border-emerald-300/40 bg-emerald-500/20 p-2.5 text-sm text-emerald-50">
+                                {success}
+                            </div>
+                        )}
+
+                        {devOtp && (
+                            <div className="mb-3 rounded-lg border border-amber-300/40 bg-amber-500/20 p-2.5 text-sm text-amber-50">
+                                Dev OTP: {devOtp}
                             </div>
                         )}
 
@@ -169,170 +246,117 @@ export default function RegisterContent() {
                             onSubmit={handleSubmit}
                             className={`space-y-3 transform transition-all duration-500 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'}`}
                         >
-                            {/* always show primary info */}
-                            <>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    placeholder="Full name"
-                                    className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                    required
-                                />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    placeholder="Email"
-                                    className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                    required
-                                />
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    placeholder="Phone"
-                                    className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleInputChange}
-                                    placeholder="Location"
-                                    className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                    required
-                                />
+                            {mode === 'email' ? (
+                                <>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        placeholder="Full name"
+                                        className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                                        required
+                                    />
 
-                                {role === 'farmer' && (
-                                    <>
+                                    {role === 'shopkeeper' && (
                                         <input
                                             type="text"
-                                            name="farmSize"
-                                            value={formData.farmSize}
-                                            onChange={handleInputChange}
-                                            placeholder="Farm size (acres)"
-                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                        />
-                                        <select
-                                            title="Select soil type"
-                                            name="soilType"
-                                            value={formData.soilType}
-                                            onChange={handleInputChange}
-                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/85 text-gray-800 focus:ring-2 focus:ring-green-400 focus:border-transparent"
-                                        >
-                                            <option value="">Soil type</option>
-                                            <option value="clay">Clay</option>
-                                            <option value="loam">Loam</option>
-                                            <option value="sandy">Sandy</option>
-                                            <option value="silt">Silt</option>
-                                        </select>
-                                        <input
-                                            type="text"
-                                            name="farmingArea"
-                                            value={formData.farmingArea}
-                                            onChange={handleInputChange}
-                                            placeholder="Farming area"
-                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                        />
-                                    </>
-                                )}
-
-                                {role === 'shopkeeper' && (
-                                    <>
-                                        <input
-                                            type="text"
-                                            name="companyName"
-                                            value={formData.companyName}
+                                            name="shopName"
+                                            value={formData.shopName}
                                             onChange={handleInputChange}
                                             placeholder="Shop name"
-                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
+                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                                            required
                                         />
-                                        <select
-                                            title="Select business type"
-                                            name="businessType"
-                                            value={formData.businessType}
+                                    )}
+
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
                                             onChange={handleInputChange}
-                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/85 text-gray-800 focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                                            placeholder="Email"
+                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition sm:flex-1"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={sendOtp}
+                                            disabled={sendingOtp || isLoading}
+                                            className={`h-10 rounded-lg px-4 font-semibold text-white bg-gradient-to-r ${theme.accent} disabled:opacity-60`}
                                         >
-                                            <option value="">Business type</option>
-                                            <option value="fertilizers">Fertilizers & Seeds</option>
-                                            <option value="tools">Agricultural Tools</option>
-                                            <option value="general">General Store</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </>
-                                )}
+                                            {sendingOtp ? 'Sending...' : 'Send OTP'}
+                                        </button>
+                                    </div>
 
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleInputChange}
-                                        placeholder="Password"
-                                        className="w-full h-10 px-3 pr-10 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-                                    >
-                                        {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                                    </button>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        type={showConfirmPassword ? 'text' : 'password'}
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleInputChange}
-                                        placeholder="Confirm password"
-                                        className="w-full h-10 px-3 pr-10 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition transform duration-200 ease-out focus:scale-105 focus:shadow-lg"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
-                                    >
-                                        {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                                    </button>
-                                </div>
-                            </>
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                        <input
+                                            type="text"
+                                            name="otp"
+                                            value={formData.otp}
+                                            onChange={handleInputChange}
+                                            placeholder="Enter OTP"
+                                            className="w-full h-10 px-3 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition sm:flex-1"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={verifyOtp}
+                                            disabled={verifyingOtp || !otpSent || isLoading}
+                                            className="h-10 rounded-lg px-4 font-semibold text-white border border-white/30 bg-white/10 disabled:opacity-50"
+                                        >
+                                            {verifyingOtp ? 'Verifying...' : otpVerified ? 'Verified' : 'Verify OTP'}
+                                        </button>
+                                    </div>
 
-                            <div className="pt-1 flex items-center gap-2">
-                                <button
-                                    type="submit"
-                                    disabled={loading || isLoading}
-                                    className={`flex-1 h-10 rounded-lg bg-gradient-to-r ${theme.accent} text-white font-semibold disabled:opacity-60`}
-                                >
-                                    {loading || isLoading ? 'Creating...' : 'Create Account'}
-                                </button>
-                            </div>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={handleInputChange}
+                                            placeholder="Password"
+                                            className="w-full h-10 px-3 pr-10 rounded-lg border border-white/30 bg-white/15 text-white placeholder:text-white/60 focus:ring-2 focus:ring-green-400 focus:border-transparent transition"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                                        >
+                                            {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={submitting || isLoading}
+                                        className={`w-full h-10 rounded-lg bg-gradient-to-r ${theme.accent} text-white font-semibold disabled:opacity-60`}
+                                    >
+                                        {submitting || isLoading ? 'Creating...' : 'Register'}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="space-y-3">
+                                    <p className="rounded-lg border border-white/20 bg-white/10 p-3 text-sm text-white/85">
+                                        Continue with Google to register faster. Your role will stay as {role === 'shopkeeper' ? 'shopkeeper' : 'farmer'}.
+                                    </p>
+                                    <a
+                                        href={googleHref}
+                                        className={`w-full h-10 rounded-lg bg-gradient-to-r ${theme.accent} text-white font-semibold inline-flex items-center justify-center gap-2`}
+                                    >
+                                        Continue with Google
+                                        <FaArrowRight size={12} />
+                                    </a>
+                                </div>
+                            )}
 
                             <p className="text-center text-xs text-white/85">
                                 <Link href={`/auth/login?role=${role}`} className={`${theme.soft} font-semibold hover:text-white`}>
                                     Sign in
                                 </Link>
                             </p>
-
-                            <div className="mt-2">
-                                <a
-                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/google?role=${role}`}
-                                    className="w-full block mt-2 py-2.5 px-4 border border-white/30 rounded-lg bg-white/10 text-white hover:bg-white/15 transition text-sm md:text-base text-center"
-                                >
-                                    <svg className="inline-block h-4 w-4 mr-2 align-middle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M21.35 11.1h-9.18v2.92h5.26c-.23 1.55-1.55 4.56-5.26 4.56-3.16 0-5.73-2.61-5.73-5.83s2.57-5.83 5.73-5.83c1.8 0 3 .77 3.69 1.43l2.52-2.42C16.8 3.24 14.58 2.2 11.7 2.2 6.91 2.2 3 6.12 3 10.9s3.91 8.7 8.7 8.7c5.02 0 8.36-3.52 8.66-8.5.01-.26.01-.5.0-.0z" fill="currentColor" />
-                                    </svg>
-                                    Continue with Google
-                                </a>
-                            </div>
                         </form>
                     </div>
                 </div>

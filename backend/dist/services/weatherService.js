@@ -13,17 +13,40 @@ class LocationNotFoundError extends Error {
         this.name = 'LocationNotFoundError';
     }
 }
-function getMockWeatherData() {
+function getWeatherApiKey() {
+    return process.env.WEATHER_API_KEY || process.env.OPENWEATHER_API_KEY;
+}
+function getWeatherApiBaseUrl() {
+    return process.env.WEATHER_API_BASE_URL || 'https://api.weatherapi.com/v1';
+}
+function normalizeIcon(icon) {
+    if (!icon)
+        return undefined;
+    if (icon.startsWith('//'))
+        return `https:${icon}`;
+    return icon;
+}
+function normalizeCondition(condition) {
+    if (!condition)
+        return null;
+    return {
+        text: condition.text,
+        icon: normalizeIcon(condition.icon),
+        code: condition.code,
+    };
+}
+function buildMockWeatherData() {
     const now = Math.floor(Date.now() / 1000);
     return {
         current: {
             temp: 24 + Math.random() * 8,
             humidity: 60 + Math.random() * 20,
-            wind_speed: 3 + Math.random() * 5,
+            wind_speed: 10 + Math.random() * 20,
+            wind_kph: 10 + Math.random() * 20,
             weather: {
-                main: ['Sunny', 'Cloudy', 'Partly Cloudy', 'Clear'][Math.floor(Math.random() * 4)],
+                text: ['Sunny', 'Cloudy', 'Partly Cloudy', 'Clear'][Math.floor(Math.random() * 4)],
                 description: 'pleasant weather',
-                icon: '01d',
+                icon: '//cdn.weatherapi.com/weather/64x64/day/113.png',
             },
         },
         daily: Array.from({ length: 7 }, (_, i) => ({
@@ -35,9 +58,9 @@ function getMockWeatherData() {
             },
             pop: Math.random() * 0.3,
             weather: {
-                main: ['Clear', 'Clouds', 'Rain'][Math.floor(Math.random() * 3)],
+                text: ['Clear', 'Clouds', 'Rain'][Math.floor(Math.random() * 3)],
                 description: 'weather forecast',
-                icon: ['01d', '02d', '09d'][Math.floor(Math.random() * 3)],
+                icon: '//cdn.weatherapi.com/weather/64x64/day/116.png',
             },
         })),
         hourly: Array.from({ length: 24 }, (_, i) => ({
@@ -45,67 +68,107 @@ function getMockWeatherData() {
             temp: 22 + Math.random() * 6,
             pop: Math.random() * 0.2,
             weather: {
-                main: 'Clear',
+                text: 'Clear',
                 description: 'clear sky',
-                icon: '01d',
+                icon: '//cdn.weatherapi.com/weather/64x64/day/113.png',
             },
         })),
+        raw: { provider: 'mock' },
     };
 }
-async function fetchWeather(lat, lon) {
-    const OPENWEATHER_KEY = process.env.OPENWEATHER_API_KEY;
-    const BASE_URL = process.env.OPENWEATHER_BASE_URL || 'https://api.openweathermap.org/data/2.5';
-    const key = `${lat},${lon}`;
+function normalizeWeatherPayload(payload) {
+    const location = payload?.location
+        ? {
+            name: payload.location.name || '',
+            displayName: [payload.location.name, payload.location.region, payload.location.country]
+                .filter(Boolean)
+                .join(', '),
+            lat: Number(payload.location.lat),
+            lon: Number(payload.location.lon),
+        }
+        : null;
+    const forecastDays = (payload?.forecast?.forecastday || []).slice(0, 7).map((day) => ({
+        dt: day.date_epoch,
+        temp: {
+            day: day.day?.avgtemp_c,
+            min: day.day?.mintemp_c,
+            max: day.day?.maxtemp_c,
+        },
+        pop: (day.day?.daily_chance_of_rain ?? 0) / 100,
+        weather: normalizeCondition(day.day?.condition),
+    }));
+    const hourly = (payload?.forecast?.forecastday || [])
+        .flatMap((day) => day.hour || [])
+        .slice(0, 24)
+        .map((hour) => ({
+        dt: hour.time_epoch,
+        temp: hour.temp_c,
+        pop: (hour.chance_of_rain ?? 0) / 100,
+        weather: normalizeCondition(hour.condition),
+    }));
+    return {
+        location,
+        current: {
+            temp: payload?.current?.temp_c,
+            humidity: payload?.current?.humidity,
+            wind_speed: payload?.current?.wind_kph,
+            wind_kph: payload?.current?.wind_kph,
+            weather: normalizeCondition({
+                text: payload?.current?.condition?.text,
+                icon: payload?.current?.condition?.icon,
+                code: payload?.current?.condition?.code,
+            }),
+        },
+        daily: forecastDays,
+        hourly,
+        raw: payload,
+    };
+}
+function isLocationNotFoundError(error) {
+    return error?.response?.status === 400 && String(error?.response?.data?.error?.message || error?.message || '')
+        .toLowerCase()
+        .includes('no matching location found');
+}
+async function requestWeather(query, cacheKey) {
+    const apiKey = getWeatherApiKey();
+    const baseUrl = getWeatherApiBaseUrl();
     const now = Date.now();
-    const existing = cache.get(key);
+    const existing = cache.get(cacheKey);
     if (existing && now - existing.ts < TTL) {
         return existing.data;
     }
     let normalized;
     try {
-        if (!OPENWEATHER_KEY)
-            throw new Error('OPENWEATHER_API_KEY is not set');
-        const url = `${BASE_URL}/onecall`;
-        const params = {
-            lat,
-            lon,
-            units: 'metric',
-            exclude: 'minutely,alerts',
-            appid: OPENWEATHER_KEY,
-        };
-        const resp = await axios_1.default.get(url, { params, timeout: 8000 });
-        const payload = resp.data;
-        normalized = {
-            current: {
-                temp: payload.current?.temp,
-                humidity: payload.current?.humidity,
-                wind_speed: payload.current?.wind_speed,
-                weather: payload.current?.weather?.[0] || null,
+        if (!apiKey)
+            throw new Error('WEATHER_API_KEY is not set');
+        const url = `${baseUrl}/forecast.json`;
+        const resp = await axios_1.default.get(url, {
+            params: {
+                key: apiKey,
+                q: query,
+                days: 7,
+                aqi: 'no',
+                alerts: 'no',
             },
-            hourly: (payload.hourly || []).slice(0, 24).map((h) => ({
-                dt: h.dt,
-                temp: h.temp,
-                pop: h.pop,
-                weather: h.weather?.[0] || null,
-            })),
-            daily: (payload.daily || []).slice(0, 7).map((d) => ({
-                dt: d.dt,
-                temp: d.temp,
-                pop: d.pop,
-                weather: d.weather?.[0] || null,
-            })),
-            raw: payload,
-        };
+            timeout: 8000,
+        });
+        normalized = normalizeWeatherPayload(resp.data);
     }
     catch (error) {
+        if (isLocationNotFoundError(error)) {
+            throw new LocationNotFoundError('No matching location found');
+        }
         const msg = error?.response?.status === 401
-            ? 'Invalid OpenWeather API key (401)'
-            : error?.message;
-        console.warn('⚠️ OpenWeather API failed, using mock data:', msg);
-        normalized = getMockWeatherData();
+            ? 'Invalid WeatherAPI.com API key (401)'
+            : error?.response?.data?.error?.message || error?.message;
+        console.warn('⚠️ WeatherAPI failed, using mock data:', msg);
+        normalized = buildMockWeatherData();
     }
-    cache.set(key, { ts: now, data: normalized });
+    cache.set(cacheKey, { ts: now, data: normalized });
     return normalized;
+}
+async function fetchWeather(lat, lon) {
+    return requestWeather(`${lat},${lon}`, `${lat},${lon}`);
 }
 async function searchLocations(query) {
     const normalizedQuery = query.trim().toLowerCase();
@@ -117,10 +180,13 @@ async function searchLocations(query) {
     if (cached && now - cached.ts < TTL) {
         return cached.data;
     }
+    const apiKey = getWeatherApiKey();
+    if (!apiKey) {
+        throw new Error('WEATHER_API_KEY is not set');
+    }
     const toSuggestion = (item) => {
-        const rawDisplay = item.display_name || item.name || query;
-        const parts = String(rawDisplay).split(',').map((p) => p.trim());
-        const shortName = parts[0] || item.name || query;
+        const rawDisplay = [item.name, item.region, item.country].filter(Boolean).join(', ') || query;
+        const shortName = item.name || rawDisplay.split(',')[0] || query;
         return {
             name: shortName,
             displayName: rawDisplay,
@@ -139,85 +205,45 @@ async function searchLocations(query) {
                 unique.set(k, s);
         }
     };
-    // 1) Nominatim strict India query
     try {
-        const response = await axios_1.default.get('https://nominatim.openstreetmap.org/search', {
+        const response = await axios_1.default.get(`${getWeatherApiBaseUrl()}/search.json`, {
             params: {
-                q: `${query}, India`,
-                format: 'jsonv2',
-                addressdetails: 1,
-                limit: 8,
-                countrycodes: 'in',
-            },
-            headers: {
-                'User-Agent': 'kisan-unnati-weather/1.0',
+                key: apiKey,
+                q: query,
             },
             timeout: 8000,
         });
         addList(response.data || []);
     }
     catch {
-        // Keep going with fallback providers.
-    }
-    // 2) Nominatim relaxed query (helps with tiny villages/spellings)
-    if (unique.size < 5) {
-        try {
-            const response = await axios_1.default.get('https://nominatim.openstreetmap.org/search', {
-                params: {
-                    q: query,
-                    format: 'jsonv2',
-                    addressdetails: 1,
-                    limit: 8,
-                    countrycodes: 'in',
-                },
-                headers: {
-                    'User-Agent': 'kisan-unnati-weather/1.0',
-                },
-                timeout: 8000,
-            });
-            addList(response.data || []);
-        }
-        catch {
-            // Ignore and continue.
-        }
-    }
-    // 3) Open-Meteo geocoding fallback (free and fast)
-    if (unique.size < 5) {
-        try {
-            const response = await axios_1.default.get('https://geocoding-api.open-meteo.com/v1/search', {
-                params: {
-                    name: query,
-                    count: 8,
-                    language: 'en',
-                    countryCode: 'IN',
-                },
-                timeout: 8000,
-            });
-            const mapped = (response.data?.results || []).map((item) => ({
-                name: item.name,
-                display_name: `${item.name}${item.admin1 ? `, ${item.admin1}` : ''}, India`,
-                lat: item.latitude,
-                lon: item.longitude,
-            }));
-            addList(mapped);
-        }
-        catch {
-            // Ignore if fallback also fails.
-        }
+        // Search is best-effort; weather lookup can still work directly with the text query.
     }
     const suggestions = Array.from(unique.values()).slice(0, 8);
     geoCache.set(cacheKey, { ts: now, data: suggestions });
     return suggestions;
 }
 async function fetchWeatherByLocationQuery(query) {
-    const suggestions = await searchLocations(query);
-    if (!suggestions.length) {
-        throw new LocationNotFoundError('No matching location found in India');
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+        throw new LocationNotFoundError('No matching location found');
     }
-    const top = suggestions[0];
-    const weather = await fetchWeather(top.lat, top.lon);
+    const suggestions = await searchLocations(trimmedQuery);
+    if (suggestions.length) {
+        const top = suggestions[0];
+        const weather = await fetchWeather(top.lat, top.lon);
+        return {
+            location: top,
+            data: weather,
+        };
+    }
+    const weather = await requestWeather(trimmedQuery, `query:${trimmedQuery.toLowerCase()}`);
     return {
-        location: top,
+        location: weather.location || {
+            name: trimmedQuery,
+            displayName: trimmedQuery,
+            lat: Number.NaN,
+            lon: Number.NaN,
+        },
         data: weather,
     };
 }

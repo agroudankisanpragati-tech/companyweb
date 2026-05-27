@@ -115,6 +115,8 @@ PUT    /api/marketplace/listings/:id - Update listing
 GET    /api/weather - Get weather data
 ```
 
+Weather lookups are powered by WeatherAPI.com. Set `WEATHER_API_KEY` in your backend env file for live data. The backend also accepts `OPENWEATHER_API_KEY` as a fallback name for older setups.
+
 ### Users
 ```
 GET    /api/users/:id       - Get user profile
@@ -236,7 +238,8 @@ JWT_SECRET               # JWT signing secret
 CLOUDINARY_CLOUD_NAME    # Cloudinary account name
 CLOUDINARY_API_KEY       # Cloudinary API key
 CLOUDINARY_API_SECRET    # Cloudinary API secret
-WEATHER_API_KEY          # Weather API key
+WEATHER_API_KEY          # WeatherAPI.com API key
+WEATHER_API_BASE_URL     # Optional WeatherAPI base URL override
 NODE_ENV                 # development | production
 FRONTEND_URL             # Frontend URL for CORS
 ADMIN_URL                # Admin URL for CORS
